@@ -1,0 +1,16 @@
+name: Scheduled Deno Deploy Refresh
+
+on:
+  schedule:
+    # Every 15 minutes during market hours (9:30am-4pm ET, Mon-Fri)
+    - cron: '*/15 13-20 * * 1-5'
+    # Once nightly at 8pm ET (0:00 UTC)
+    - cron: '0 0 * * *'
+
+jobs:
+  call-deno-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Deno Deploy /refresh-auto endpoint
+        run: |
+          curl -X GET "https://fh-stock-service.deno.dev/refresh-auto"
