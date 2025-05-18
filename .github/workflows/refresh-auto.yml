@@ -13,4 +13,4 @@ jobs:
     steps:
       - name: Call Deno Deploy /refresh-auto endpoint
         run: |
-          curl -X GET "https://fh-stock-service.deno.dev/refresh-auto"
+          curl -X GET "https://r15l-fh-stock-se-69.deno.dev/refresh-auto"
