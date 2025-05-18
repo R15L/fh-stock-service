@@ -95,7 +95,7 @@ export async function fetchEarningsDate(symbol: string): Promise<string | undefi
 }
 
 export async function upsertStockSentiment(data: StockSentiment) {
-  const { error } = await supabase.from("stock_sentiment").upsert(data);
+  const { error } = await supabase.from("stock_overview").upsert(data);
   if (error) throw error;
 }
 

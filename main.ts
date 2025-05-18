@@ -2,7 +2,7 @@
 // @ts-check
 import "https://deno.land/std@0.224.0/dotenv/load.ts";
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { refreshAllStocks, fetchQuote, fetchLogo, fetchProfile, fetchEarningsDate, upsertStockSentiment, shuffleArray } from "./stock_sentiment.ts";
+import { refreshAllStocks, fetchQuote, fetchLogo, fetchProfile, fetchEarningsDate, upsertStockSentiment, shuffleArray } from "./stock_overview.ts";
 import { refreshAllCompanyProfiles } from "./company_profile.ts";
 import { SP500_COMPANIES } from "./sp500.ts";
 

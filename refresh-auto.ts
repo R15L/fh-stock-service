@@ -1,6 +1,6 @@
 import "https://deno.land/std@0.224.0/dotenv/load.ts";
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { refreshAllStocks } from "./stock_sentiment.ts";
+import { refreshAllStocks } from "./stock_overview.ts";
 import { refreshAllCompanyProfiles } from "./company_profile.ts";
 
 const FINNHUB_API_KEY = Deno.env.get("FINNHUB_API_KEY");
