@@ -1,14 +1,28 @@
 # Deno Finnhub-Supabase Stock Quote Service
 
-This backend service fetches stock data from the Finnhub API and saves it to a Supabase table. It exposes an HTTP endpoint to trigger the fetch-and-save process. The frontend should fetch cached data directly from Supabase.
+## Project Overview & Analysis (2024)
 
-## Features
-- Deno HTTP server
-- Fetches stock quotes from Finnhub
-- Upserts data into Supabase (`stock_quotes` table)
+This backend service fetches stock and company data (primarily S&P 500) from the Finnhub API and saves it to a Supabase table. It exposes HTTP endpoints and batch scripts to trigger the fetch-and-save process. The frontend should fetch cached data directly from Supabase.
+
+### Key Features & Structure
+- Deno HTTP server and batch scripts
+- Fetches stock/company data from Finnhub
+- Upserts data into Supabase (`stock_overview` and `company_profile` tables)
 - Exposes `/refresh-quote?symbol=...` endpoint
 - Reads secrets from environment variables
 - CORS enabled for local development
+- Automated batch updates via GitHub Actions and Deno Deploy
+
+### Current State
+- **Stock sentiment/filings sentiment features have been removed.**
+- **User settings and Clerk integration are not present.**
+- Focus is on core stock/company data processing and automation.
+- Batch scripts and endpoints respect API rate limits (1-second delay per symbol).
+- Error handling and logging are present throughout.
+- `.env` and `.gitignore` are used for secret management.
+- No explicit tests or monitoring are present (recommended for production).
+
+---
 
 ## Requirements
 - [Deno](https://deno.com/) (v1.30+ recommended)
@@ -25,27 +39,27 @@ FINNHUB_API_KEY=your-finnhub-api-key
 ```
 
 ## Supabase Table Schema
-Create a table called `stock_quotes` with the following columns:
+Create a table called `stock_overview` with the following columns:
 
-| Column | Type    | Notes         |
-|--------|---------|--------------|
-| symbol | text    | Primary key  |
-| c      | numeric | Current price|
-| h      | numeric | High         |
-| l      | numeric | Low          |
-| o      | numeric | Open         |
-| pc     | numeric | Prev. close  |
-| t      | numeric | Timestamp    |
-| ed     | text    | Earnings date (YYYY-MM-DD or null) |
-| v      | numeric | Volume (or null) |
-| mc     | numeric | Market cap (or null) |
+| Column         | Type    | Notes         |
+|---------------|---------|--------------|
+| symbol        | text    | Primary key  |
+| current_price | numeric | Current price|
+| high          | numeric | High         |
+| low           | numeric | Low          |
+| open          | numeric | Open         |
+| previous_close| numeric | Prev. close  |
+| last_retrieved| timestamptz | Last update |
+| name          | text    | Company name |
+| logo          | text    | Logo URL     |
+| earnings_date | text    | Earnings date|
+| sector        | text    | Sector       |
+| market_cap    | numeric | Market cap   |
 
 ## Batch Update Process & Rate Limiting
 
 - The batch update script (`refresh-all.ts`) randomizes the order of S&P 500 symbols before processing.
-- Stocks are processed in **batches of 100 per minute** (Finnhub's free API limit).
-- After each batch, the script **waits 60 seconds** before starting the next batch to respect the rate limit.
-- Each stock is upserted in parallel within its batch.
+- Stocks are processed one per second (to respect Finnhub's free API limit).
 - If a stock fails to fetch after 3 retries (with exponential backoff), its symbol is tracked.
 - At the end of the run, a summary of all failed symbols is printed to the console.
 - You can retry just the failed symbols by modifying the script to process only those, or by re-running the batch (randomized order helps avoid repeated failures).
@@ -77,7 +91,7 @@ deno run --allow-net --allow-env refresh-all.ts
 
 ## Batch Scripts
 
-You can run batch updates for either company profiles or stock sentiment independently:
+You can run batch updates for either company profiles or stock overview independently:
 
 ### Refresh all company profiles
 
@@ -87,12 +101,12 @@ Fetches and upserts company profile data for all S&P 500 symbols from Finnhub:
 deno run --allow-net --allow-env refresh-all-company-profiles.ts
 ```
 
-### Refresh all stock sentiment
+### Refresh all stock overview
 
 Fetches and upserts stock quote data for all S&P 500 symbols from Finnhub:
 
 ```sh
-deno run --allow-net --allow-env refresh-all-stock-sentiment.ts
+deno run --allow-net --allow-env refresh-all-stock-overview.ts
 ```
 
 Each script logs progress and errors to the console. You can run them as often as needed.
@@ -131,7 +145,7 @@ Response:
 
 Deploy `refresh-auto.ts` to Deno Deploy. This endpoint:
 - Checks if the US market is open using Finnhub's market status API.
-- If open, runs a full stock sentiment refresh.
+- If open, runs a full stock overview refresh.
 - If closed, runs a full company profile refresh.
 - Returns a simple text response indicating what was refreshed.
 
